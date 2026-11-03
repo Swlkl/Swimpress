@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Swimpress – Politique de Confidentialité</title><link rel="stylesheet" href="style.css"></head>
+<body>
+<header>
+  <div class="logo">Swi<b>mpress</b></div>
+  <a href="index.html" class="btn ghost sm">Retour à l'accueil</a>
+</header>
+<main>
+ <section class="card">
+  <h1>Politique de Confidentialité (RGPD)</h1>
+  <p class="muted">Dernière mise à jour : Novembre 2026</p>
+
+  <h2>1. Données collectées</h2>
+  <p>Dans le cadre de l'utilisation de la plateforme Swimpress, nous sommes amenés à collecter les données personnelles suivantes :</p>
+  <ul>
+    <li><strong>Données de compte :</strong> Votre pseudo et votre mot de passe (chiffré via le système d'authentification de Supabase).</li>
+    <li><strong>Fichiers et contenus :</strong> Les fichiers 3D (formats `.stl` ou `.obj`) que vous déposez pour estimation et impression, ainsi que les titres associés à vos demandes.</li>
+  </ul>
+
+  <h2>2. Finalité du traitement</h2>
+  <p>Ces données sont collectées pour les finalités suivantes :</p>
+  <ul>
+    <li>Gestion de votre compte utilisateur et sécurisation des accès.</li>
+    <li>Analyse géométrique du modèle 3D et calcul des devis d'impression.</li>
+    <li>Suivi de l'état de vos demandes (en attente, acceptée, refusée) par l'administrateur.</li>
+  </ul>
+
+  <h2>3. Sécurité et Stockage</h2>
+  <p>Les données sont stockées de manière sécurisée. Grâce aux règles de sécurité au niveau des lignes (**Row Level Security - RLS**) configurées dans notre base de données Supabase, vos fichiers et demandes personnelles sont strictement inaccessibles aux autres utilisateurs : seuls vous-même et l'administrateur y avez accès.</p>
+
+  <h2>4. Vos droits (RGPD)</h2>
+  <p>Conformément au Règlement Général sur la Protection des Données, vous disposez des droits d'accès, de rectification et de suppression de vos données :</p>
+  <ul>
+    <li><strong>Droit à l'effacement :</strong> Vous pouvez à tout moment supprimer vos demandes en cours et les fichiers associés directement depuis votre tableau de bord (via le bouton "Supprimer"), ce qui efface définitivement le fichier du serveur de stockage.</li>
+  </ul>
+  <p>Pour toute question concernant vos données, vous pouvez nous contacter à l'adresse : ryan_lefevre@outlook.fr.</p>
+ </section>
+</main>
+<footer>
+  <div class="footer-content">
+    <div>Swimpress · Gestion et estimation d'impression 3D</div>
+    <div class="footer-links">
+      <a href="mentions.html">Mentions légales</a>
+      <div class="footer-links"><a href="index.html">Accueil</a></div>
+    </div>
+  </div>
+  <p class="muted small">Données sécurisées et protégées via Supabase & RLS.</p>
+</footer>
+</body></html>
