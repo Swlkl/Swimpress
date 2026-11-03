@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PrintLab – Accueil</title><link rel="stylesheet" href="style.css"></head>
+<body>
+<header><div class="logo">Print<b>Lab</b></div>
+ <nav><a href="#envoyer">Envoyer une pièce</a><a href="#demandes">Mes demandes</a></nav>
+ <div id="who"><span id="pseudo"></span><span id="badge" class="chip" hidden>Admin</span><button id="logout" class="btn ghost sm">Déconnexion</button></div></header>
+
+<section class="hero"><div>
+ <h1>Imprime tes idées<br>en 3D.</h1>
+ <p>Importe ton modèle, vérifie-le en 3D, et je te dis si je l'imprime.</p>
+ <a href="#envoyer" class="btn big">Envoyer une pièce</a></div>
+ <div class="scene"><div class="cube"><i></i><i></i><i></i><i></i><i></i><i></i></div></div>
+</section>
+
+<main>
+ <div class="stats"><div><b id="s-all">0</b>Demandes</div><div><b id="s-pending">0</b>En attente</div><div><b id="s-accepted">0</b>Acceptées</div><div><b id="s-refused">0</b>Refusées</div></div>
+
+ <div class="steps">
+  <div class="card"><span class="ico">⬆</span><h3>Importe</h3><p class="muted">Dépose un fichier STL ou OBJ.</p></div>
+  <div class="card"><span class="ico">🧊</span><h3>Vérifie</h3><p class="muted">La pièce s'affiche en 3D avec ses dimensions ainsi que sa valeur totale.</p></div>
+  <div class="card"><span class="ico">✔</span><h3>Suis</h3><p class="muted">En attente, acceptée ou refusée : tu vois tout ici.</p></div>
+ </div>
+
+ <section class="card" id="envoyer">
+  <div class="row"><h2>Nouvelle pièce</h2><label class="btn" for="f">Importer la pièce 3D</label><input id="f" type="file" accept=".stl,.obj" hidden></div>
+  <div id="viewer"><p id="hint" class="muted">Glisse ton fichier ici ou clique sur « Importer ».<br>STL ou OBJ, 50 Mo max.</p></div>
+  <div id="est" hidden>
+   <div class="row"><span id="fit" class="chip"></span><label class="chk"><input type="checkbox" id="showSup"> Voir les supports</label></div>
+   <div class="estgrid">
+    <div class="params"><h3>Réglages</h3>
+     <label>Remplissage (%)<input id="infill" type="number" value="20" min="0" max="100"></label>
+     <label>Hauteur de couche (mm)<input id="lh" type="number" value="0.2" step="0.05" min="0.05"></label>
+     <!-- Paramètres verrouillés par l'administrateur -->
+    <label>Prix du filament (€/kg)
+      <input id="kg" type="number" value="20" readonly disabled>
+    </label>
+    <label>Prix de l'électricité (€/kWh)
+      <input id="kwh" type="number" value="0.25" step="0.01" readonly disabled>
+    </label>
+    <label>Conso. moyenne Ender 3 (W)
+      <input id="watt" type="number" value="120" readonly disabled>
+    </label>
+     <label class="chk"><input type="checkbox" id="useSup" checked> Compter les supports</label></div>
+    <div class="res"><h3>Estimation · Creality Ender 3</h3>
+      <div><span>Temps d'impression</span><b id="r-time"></b></div>
+      <div><span>Filament PLA</span><b id="r-g"></b></div>
+      <div><span>dont supports</span><b id="r-sup"></b></div>
+      <div><span>Coût du filament</span><b id="r-fil"></b></div>
+      <div><span>Coût électricité</span><b id="r-elec"></b></div>
+      <div><span>Usure de la machine (25%)</span><b id="r-margin"></b></div>
+      <div class="total"><span>Prix total</span><b id="r-total"></b></div>
+      <p class="muted small">Estimation indicative (PLA, 50 mm/s) : le vrai résultat dépend du slicer. Les supports orange sont approximatifs ; les zones rouges sont en porte-à-faux (&gt; 45°).</p>
+    </div></div>
+   <div class="row" id="send" hidden><span id="dims" class="chip dim"></span>
+   <input id="title" placeholder="Nom de la pièce"><button id="submit" class="btn">Envoyer la demande</button></div>
+ </section>
+
+ <section class="card" id="demandes"><div class="row"><h2 id="listTitle">Mes demandes</h2>
+  <div class="tabs mini"><button class="tab on" data-f="all">Toutes</button><button class="tab" data-f="pending">En attente</button><button class="tab" data-f="accepted">Acceptées</button><button class="tab" data-f="refused">Refusées</button></div></div>
+  <div id="list"></div></section>
+</main>
+<footer>PrintLab · imprimé avec ♥ sur une Bambu Lab</footer>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/STLLoader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/OBJLoader.js"></script>
+<script src="config.js"></script><script src="app.js"></script>
+</body></html>
