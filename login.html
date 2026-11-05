@@ -1,22 +1,22 @@
 <!DOCTYPE html>
 <html lang="fr"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Swimpress – Connexion</title><link rel="stylesheet" href="style.css"></head>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Swimpress – Connexion</title><link rel="stylesheet" href="style.css"><script>try{if(localStorage.getItem("theme")==="dark")document.documentElement.dataset.theme="dark"}catch(e){}</script></head>
 <body class="split">
 <aside class="side">
  <div class="logo">Swi<b>mpress</b></div>
- <div class="scene"><div class="cube"><i></i><i></i><i></i><i></i><i></i><i></i></div></div>
+ <div class="scene" aria-hidden="true"><div class="cube"><i></i><i></i><i></i><i></i><i></i><i></i></div></div>
  <h2>Tes idées, imprimées en 3D.</h2>
  <p>Envoie ton modèle, vois-le en 3D, et suis sa validation en direct.</p>
 </aside>
 <section class="formside">
  <form class="auth" id="form" autocomplete="on">
-  <h1>Connexion</h1><p class="muted" id="sub">Entre ton pseudo et ton mot de passe.</p>
+  <h1>Bon retour</h1><p class="muted" id="sub">Entre ton pseudo et ton mot de passe.</p>
   <div class="tabs"><button type="button" class="tab on" data-m="login">Connexion</button><button type="button" class="tab" data-m="signup">Créer un compte</button></div>
   <label>Pseudo<input id="u" placeholder="ex : Thomas" autocomplete="username" maxlength="20" required></label>
   <label>Mot de passe<span class="pw"><input id="p" type="password" placeholder="6 caractères minimum" autocomplete="current-password" required><button type="button" id="eye" aria-label="Afficher le mot de passe">👁</button></span></label>
   <button id="go" class="btn big" type="submit">Se connecter</button>
-  <p id="err" class="err"></p>
+  <p id="err" class="err" role="alert"></p>
  </form>
 </section>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
@@ -24,14 +24,20 @@
 <script>
 let mode = "login";
 const mail = p => p.trim().toLowerCase().replace(/[^a-z0-9_.-]/g, "") + "@printlab.app";
-sb.auth.getSession().then(({ data }) => { if (data.session) location.replace("index.html"); });
+// Anti-boucle : si index.html vient de nous renvoyer ici, la session stockée est invalide -> on la purge
+const bounced = Date.now() - Number(sessionStorage.getItem("bounce") || 0) < 5000;
+sb.auth.getSession().then(async ({ data }) => {
+  if (!data.session) return;
+  if (bounced) { $("#err").textContent = "Redirigé par index.html : " + (sessionStorage.getItem("why") || "raison inconnue"); return; } // on ne déconnecte plus : on garde la preuve
+  location.replace("index.html");
+});
 document.querySelectorAll(".tab").forEach(t => t.onclick = () => {
   mode = t.dataset.m;
   document.querySelectorAll(".tab").forEach(x => x.classList.toggle("on", x === t));
   $("#go").textContent = mode === "login" ? "Se connecter" : "Créer mon compte";
   $("#p").autocomplete = mode === "login" ? "current-password" : "new-password"; $("#err").textContent = "";
 });
-$("#eye").onclick = () => { const p = $("#p"); p.type = p.type === "password" ? "text" : "password"; };
+$("#eye").onclick = () => { const p = $("#p"), show = p.type === "password"; p.type = show ? "text" : "password"; $("#eye").setAttribute("aria-label", show ? "Masquer le mot de passe" : "Afficher le mot de passe"); };
 $("#form").addEventListener("submit", async e => {
   e.preventDefault(); $("#err").textContent = "";
   const pseudo = $("#u").value.trim(), password = $("#p").value;

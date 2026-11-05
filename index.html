@@ -1,64 +1,151 @@
 <!DOCTYPE html>
 <html lang="fr"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Swimpress – Accueil</title><link rel="stylesheet" href="style.css"></head>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Swimpress – Accueil</title>
+<script>
+/* Bandeau d'erreur visible : affiche toute erreur JS ou tout script qui n'a pas pu se charger */
+(function(){
+  function show(m){var d=document.getElementById("errbar");if(!d){d=document.createElement("pre");d.id="errbar";
+    d.style.cssText="position:fixed;z-index:999;left:0;right:0;bottom:0;margin:0;padding:12px 16px;background:#c9252d;color:#fff;font:13px/1.4 monospace;white-space:pre-wrap;max-height:40vh;overflow:auto";
+    (document.body||document.documentElement).appendChild(d);}d.textContent+=m+"\n";}
+  addEventListener("error",function(e){var t=e.target;
+    if(t&&(t.src||t.href)&&t!==window){show("Chargement impossible : "+(t.src||t.href));}
+    else{show("Erreur : "+e.message+" ("+(e.filename||"").split("/").pop()+":"+e.lineno+")");}},true);
+  addEventListener("unhandledrejection",function(e){show("Promesse rejetée : "+(e.reason&&e.reason.message||e.reason));});
+})();
+</script>
+<link rel="stylesheet" href="style.css"><script>try{if(localStorage.getItem("theme")==="dark")document.documentElement.dataset.theme="dark"}catch(e){}</script></head>
 <body>
 <header><div class="logo">Swi<b>mpress</b></div>
- <nav><a href="#envoyer">Envoyer une pièce</a><a href="#demandes">Mes demandes</a></nav>
- <div id="who"><span id="pseudo"></span><span id="badge" class="chip" hidden>Admin</span><button id="logout" class="btn ghost sm">Déconnexion</button></div></header>
+ <nav aria-label="Navigation principale"><a href="#envoyer">Importer une pièce</a><a href="#demandes">Mes demandes</a><a href="#materiaux">Matériaux</a></nav>
+ <div id="who"><button id="theme" class="btn ghost sm theme" type="button" aria-label="Changer de thème">Sombre</button><span id="pseudo"></span><span id="badge" class="chip" hidden>Admin</span><button id="logout" class="btn ghost sm">Déconnexion</button></div></header>
 
 <section class="hero"><div>
  <h1>Imprime tes idées<br>en 3D.</h1>
  <p>Importe ton modèle, vérifie-le en 3D, et je te dis si je l'imprime.</p>
- <a href="#envoyer" class="btn big">Envoyer une pièce</a></div>
- <div class="scene"><div class="cube"><i></i><i></i><i></i><i></i><i></i><i></i></div></div>
+ <a href="#envoyer" class="btn big">Importer une pièce</a></div>
+ <div class="scene" aria-hidden="true"><div class="cube"><i></i><i></i><i></i><i></i><i></i><i></i></div></div>
 </section>
 
 <main>
- <div class="stats"><div><b id="s-all">0</b>Demandes</div><div><b id="s-pending">0</b>En attente</div><div><b id="s-accepted">0</b>Acceptées</div><div><b id="s-refused">0</b>Refusées</div></div>
+ <div id="banner" class="banner" role="status" hidden></div>
+ <div class="stats" role="group" aria-label="Résumé de tes demandes"><div><b id="s-all">0</b>Demandes</div><div><b id="s-pending">0</b>En attente</div><div><b id="s-accepted">0</b>Acceptées</div><div><b id="s-refused">0</b>Refusées</div></div>
 
- <div class="steps">
-  <div class="card"><span class="ico">⬆</span><h3>Importe</h3><p class="muted">Dépose un fichier STL ou OBJ.</p></div>
-  <div class="card"><span class="ico">🧊</span><h3>Vérifie</h3><p class="muted">La pièce s'affiche en 3D avec ses dimensions ainsi que sa valeur totale.</p></div>
-  <div class="card"><span class="ico">✔</span><h3>Suis</h3><p class="muted">En attente, acceptée ou refusée : tu vois tout ici.</p></div>
- </div>
-
+ <!-- La visionneuse est le cœur du produit : elle passe avant les explications -->
  <section class="card" id="envoyer">
-  <div class="row"><h2>Nouvelle pièce</h2><label class="btn" for="f">Importer la pièce 3D</label><input id="f" type="file" accept=".stl,.obj" hidden></div>
-  <div id="viewer"><p id="hint" class="muted">Glisse ton fichier ici ou clique sur « Importer ».<br>STL ou OBJ, 50 Mo max.</p></div>
+  <div class="row"><h2>Nouvelle pièce</h2><label class="btn" for="f">Importer une pièce 3D</label><input id="f" type="file" accept=".stl,.obj,.3mf" hidden></div>
+  <div id="review" class="review" hidden>
+   <div><b id="rv-title"></b> <span id="rv-verdict" class="chip"></span><small id="rv-meta"></small></div>
+   <div class="acts"><button type="button" class="btn sm" id="rv-ok">Accepter</button><button type="button" class="btn sm red" id="rv-no">Refuser</button><button type="button" class="btn sm out" id="rv-next">Suivante →</button><button type="button" class="btn sm out" id="rv-close" aria-label="Fermer la revue">Fermer</button></div>
+   <span class="kbd">Raccourcis : A accepter · R refuser · N suivante</span>
+  </div>
+  <div id="viewer" aria-label="Visionneuse 3D de la pièce">
+   <p id="hint" class="muted">Glisse ton fichier ici ou clique sur « Importer une pièce 3D ».<br>STL, OBJ ou 3MF, 50 Mo max.</p>
+   <div id="vtotal" class="vtotal" role="status" hidden></div>
+   <div id="vtools" class="vtools" role="group" aria-label="Outils de la visionneuse" hidden>
+    <button type="button" class="vbtn" id="vReset">Recentrer</button>
+    <button type="button" class="vbtn" id="vRot" aria-pressed="false">Rotation</button>
+    <button type="button" class="vbtn" id="vWire" aria-pressed="false">Fil de fer</button>
+   </div>
+  </div>
   <div id="est" hidden>
    <div class="row"><span id="fit" class="chip"></span><label class="chk"><input type="checkbox" id="showSup"> Voir les supports</label></div>
+   <ul id="checks" class="checks" aria-label="Contrôles avant impression"></ul>
    <div class="estgrid">
     <div class="params"><h3>Réglages</h3>
-     <label>Remplissage (%)<input id="infill" type="number" value="20" min="0" max="100"></label>
-     <label>Hauteur de couche (mm)<input id="lh" type="number" value="0.2" step="0.05" min="0.05"></label>
-     <!-- Paramètres verrouillés par l'administrateur -->
-    <label>Prix du filament (€/kg)
-      <input id="kg" type="number" value="20" readonly disabled>
-    </label>
-    <label>Prix de l'électricité (€/kWh)
-      <input id="kwh" type="number" value="0.25" step="0.01" readonly disabled>
-    </label>
-    <label>Conso. moyenne Ender 3 (W)
-      <input id="watt" type="number" value="120" readonly disabled>
-    </label>
-     <label class="chk"><input type="checkbox" id="useSup" checked> Compter les supports</label></div>
+     <label>Remplissage (%)<input id="infill" type="number" inputmode="numeric" value="20" min="0" max="100"></label>
+     <label>Hauteur de couche (mm)<input id="lh" type="number" inputmode="decimal" value="0.2" step="0.05" min="0.05"></label>
+     <label>Quantité<input id="qty" type="number" inputmode="numeric" value="1" min="1" max="100"></label>
+     <label>Échelle (%)<input id="scale" type="number" inputmode="decimal" value="100" min="1" max="100000" step="1"></label>
+     <label id="colorWrap" hidden>Filament (couleur)<select id="color"></select></label>
+     <label class="chk"><input type="checkbox" id="useSup" checked> Compter les supports</label>
+     <button type="button" id="orient" class="btn out sm">Optimiser l'orientation</button>
+     <!-- Tarifs fixés par l'admin : affichés en lecture seule, plus de faux champs grisés -->
+     <div class="fixed" aria-label="Tarifs appliqués">
+      <div><span>Ender 3 (moyenne)</span><b>120 W</b></div>
+      <div><span>Plateau</span><b>220 × 220 × 250 mm</b></div>
+      <div><span>Buse</span><b>0,4 mm · 255 °C max</b></div>
+     </div>
+    </div>
     <div class="res"><h3>Estimation · Creality Ender 3</h3>
       <div><span>Temps d'impression</span><b id="r-time"></b></div>
-      <div><span>Filament PLA</span><b id="r-g"></b></div>
+      <div><span id="r-gl">Filament PLA</span><b id="r-g"></b></div>
+      <div><span>Réglages conseillés</span><b id="r-temp"></b></div>
       <div><span>dont supports</span><b id="r-sup"></b></div>
+      <div><span>Volume de la pièce</span><b id="r-vol"></b></div>
       <div><span>Coût du filament</span><b id="r-fil"></b></div>
       <div><span>Coût électricité</span><b id="r-elec"></b></div>
-      <div><span>Usure de la machine (25%)</span><b id="r-margin"></b></div>
-      <div class="total"><span>Prix total</span><b id="r-total"></b></div>
-      <p class="muted small">Estimation indicative (PLA, 50 mm/s) : le vrai résultat dépend du slicer. Les supports orange sont approximatifs ; les zones rouges sont en porte-à-faux (&gt; 45°).</p>
-    </div></div>
+      <div><span>Usure de la machine (25 %)</span><b id="r-margin"></b></div>
+      <p class="muted small">Estimation indicative (vitesse selon le matériau) : le vrai résultat dépend du slicer. Les supports orange sont approximatifs ; les zones rouges sont en porte-à-faux (&gt; 45°).</p>
+    </div>
+   </div>
    <div class="row" id="send" hidden><span id="dims" class="chip dim"></span>
-   <input id="title" placeholder="Nom de la pièce"><button id="submit" class="btn">Envoyer la demande</button></div>
+    <input id="title" placeholder="Nom de la pièce" aria-label="Nom de la pièce">
+    <input id="comment" placeholder="Commentaire pour l'imprimeur (optionnel)" maxlength="200" aria-label="Commentaire" style="flex-basis:100%"><button id="submit" class="btn">Envoyer la demande</button></div>
+  </div><!-- /#est (balise fermante manquante dans la version précédente) -->
+ </section>
+
+ <div class="steps">
+  <div class="card"><span class="ico" aria-hidden="true">1</span><h3>Importe</h3><p class="muted">Dépose un fichier STL, OBJ ou 3MF.</p></div>
+  <div class="card"><span class="ico" aria-hidden="true">2</span><h3>Vérifie</h3><p class="muted">La pièce s'affiche en 3D avec ses dimensions et son prix total.</p></div>
+  <div class="card"><span class="ico" aria-hidden="true">3</span><h3>Suis</h3><p class="muted">En attente, acceptée ou refusée : tout est ici.</p></div>
+ </div>
+
+<section class="card" id="materiaux">
+  <h2>Matériaux disponibles</h2>
+  <p class="muted" id="matspec" style="margin:6px 0 18px">Les filaments actuellement en stock. Tu peux choisir la couleur au moment d'envoyer ta demande.</p>
+  <div id="mats" class="mats"></div>
+ </section>
+
+ <section class="card" id="admin" hidden>
+  <h2>Tableau de bord</h2>
+  <div class="kpis">
+   <div><b id="k-wait">0</b>En attente<small id="k-old"></small></div>
+   <div><b id="k-rate">–</b>Taux d'acceptation<small>sur les demandes traitées</small></div>
+   <div><b id="k-week">0</b>Demandes sur 7 jours</div>
+   <div><b id="k-users">0</b>Utilisateurs actifs</div>
+   <div><b id="k-queue">0 h</b>File d'impression<small id="k-queue-n"></small></div>
+  </div>
+  <div class="accrow"><label class="chk"><input type="checkbox" id="acc" checked> J'accepte les demandes</label>
+   <input id="accMsg" placeholder="Message affiché aux utilisateurs (ex : imprimante en panne)" aria-label="Message aux utilisateurs"><button type="button" id="accSave" class="btn out sm">Enregistrer</button></div>
+  <div class="adminrow">
+   <div><h3>Activité des 14 derniers jours</h3><div id="bars" class="bars" role="img"></div></div>
+   <div><h3>Utilisateurs les plus actifs</h3><ol id="top" class="top"></ol></div>
+  </div>
+ </section>
+
+ <section class="card" id="bank" hidden>
+  <h2>Caisse</h2>
+  <p class="muted small">Paiements en espèces : clique sur « Encaisser » quand un ami te paie.</p>
+  <div class="kpis">
+   <div><b id="b-total">0,00 €</b>Encaissé au total</div>
+   <div><b id="b-month">0,00 €</b>Encaissé ce mois-ci</div>
+   <div><b id="b-due">0,00 €</b>À encaisser<small id="b-due-n"></small></div>
+  </div>
+  <div class="adminrow">
+   <div><h3>Par ami</h3><div id="b-friends" class="top"></div></div>
+   <div><h3>Derniers paiements</h3><ul id="b-last" class="top"></ul></div>
+  </div>
+ </section>
+
+ <section class="card" id="stock" hidden>
+  <h2>Stock de filament</h2>
+  <div id="stock-list" class="top"></div>
+  <div class="tools" style="margin-top:12px"><input id="fn" placeholder="Nom (ex : PLA noir)" aria-label="Nom du filament"><select id="fm" aria-label="Matériau"></select><input id="fh" type="color" value="#222222" aria-label="Couleur" style="width:56px;padding:4px"><input id="fg" type="number" value="1000" min="0" aria-label="Grammes restants" style="max-width:110px"><button type="button" id="fadd" class="btn out sm">Ajouter</button></div>
  </section>
 
  <section class="card" id="demandes"><div class="row"><h2 id="listTitle">Mes demandes</h2>
-  <div class="tabs mini"><button class="tab on" data-f="all">Toutes</button><button class="tab" data-f="pending">En attente</button><button class="tab" data-f="accepted">Acceptées</button><button class="tab" data-f="refused">Refusées</button></div></div>
+  <div class="tabs mini" role="group" aria-label="Filtrer les demandes"><button class="tab on" data-f="all">Toutes</button><button class="tab" data-f="pending">En attente</button><button class="tab" data-f="accepted">Acceptées</button><button class="tab" data-f="refused">Refusées</button></div></div>
+  <div class="tools"><input id="q" type="search" placeholder="Rechercher une demande…" aria-label="Rechercher une demande">
+   <select id="sort" aria-label="Trier"><option value="new">Plus récentes</option><option value="old">Plus anciennes</option><option value="title">Nom (A→Z)</option></select>
+   <select id="fuser" aria-label="Filtrer par utilisateur" hidden><option value="">Tous les utilisateurs</option></select>
+   <select id="fsup" aria-label="Filtrer selon les supports" hidden><option value="">Supports : tous</option><option value="true">Avec supports</option><option value="false">Sans supports</option></select>
+   <button type="button" id="csv" class="btn out sm" hidden>Exporter en CSV</button></div>
+  <div class="bulk" id="bulk" hidden>
+   <button type="button" id="selPend" class="btn out sm">Sélectionner les en attente</button>
+   <span id="bn" class="muted">Aucune sélection</span>
+   <button type="button" id="bulkOk" class="btn sm" disabled>Accepter</button><button type="button" id="bulkNo" class="btn sm red" disabled>Refuser</button>
+  </div>
   <div id="list"></div></section>
 </main>
 <footer>
@@ -69,13 +156,17 @@
       <a href="confidentialite.html">Politique de confidentialité (RGPD)</a>
     </div>
   </div>
-  <p class="muted small">Données sécurisées et protégées via Supabase & RLS.</p>
+  <p class="small">Données sécurisées et protégées via Supabase &amp; RLS.</p>
 </footer>
+<dialog id="dlg"><form method="dialog"><h3 id="dTitle"></h3><p id="dText" class="muted"></p><div id="dChips" class="dchips" hidden></div><input id="dInput" aria-label="Motif" hidden>
+ <div class="dacts"><button value="ok" id="dOk" class="btn">OK</button><button value="cancel" class="btn out" formnovalidate>Annuler</button></div></form></dialog>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/STLLoader.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/OBJLoader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/libs/fflate.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/3MFLoader.js"></script>
 <script src="config.js"></script><script src="app.js"></script>
 </body>
 </html>

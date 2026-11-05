@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Swimpress – Diagnostic</title><link rel="stylesheet" href="style.css"></head>
+<body>
+<main style="margin-top:6vh">
+ <section class="card" style="display:grid;gap:12px;max-width:560px;margin:0 auto">
+  <h2>Diagnostic de connexion</h2>
+  <p class="muted">Cette page ne redirige jamais. Elle teste chaque étape et affiche le résultat.</p>
+  <input id="u" placeholder="Pseudo" autocomplete="username">
+  <input id="p" type="password" placeholder="Mot de passe" autocomplete="current-password">
+  <button id="go" class="btn">Lancer le test</button>
+  <pre id="out" style="white-space:pre-wrap;word-break:break-word;background:var(--fill);padding:14px;border-radius:12px;font-size:13px;margin:0">En attente…</pre>
+ </section>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="config.js"></script>
+<script>
+const log = (...a) => $("#out").textContent += "\n" + a.join(" ");
+const mail = p => p.trim().toLowerCase().replace(/[^a-z0-9_.-]/g, "") + "@printlab.app";
+// Rapport automatique au chargement : la session a-t-elle survécu au changement de page ?
+(async () => {
+  $("#out").textContent = "Au chargement de cette page :";
+  log("- Adresse :", location.href.slice(0, 60));
+  log("- Protocole :", location.protocol, location.protocol === "file:" ? "(⚠ fichier local : la session ne survit souvent pas)" : "");
+  let keys = [];
+  try { keys = Object.keys(localStorage).filter(k => k.includes("auth-token")); log("- localStorage accessible : oui, clés de session :", keys.length ? keys.join(", ") : "AUCUNE"); }
+  catch (e) { log("- localStorage accessible : NON (", e.message, ")"); }
+  const s = await sb.auth.getSession();
+  log("- Session présente au chargement :", s.data.session ? "OUI (" + s.data.session.user.email + ")" : "NON");
+  log("\nMarche à suivre : clique sur « Lancer le test », puis RECHARGE cette page (F5) et regarde cette section.");
+})();
+$("#go").onclick = async () => {
+  $("#out").textContent = "Démarrage…";
+  log("1. Client Supabase :", typeof sb === "object" ? "OK" : "ABSENT");
+  const email = mail($("#u").value);
+  log("2. E-mail utilisé :", email);
+  const r = await sb.auth.signInWithPassword({ email, password: $("#p").value });
+  if (r.error) return log("   ÉCHEC connexion :", r.error.status ?? "", r.error.message);
+  log("   Connexion OK, id utilisateur :", r.data.user.id);
+  log("   E-mail confirmé :", r.data.user.email_confirmed_at ? "oui" : "NON");
+  const s = await sb.auth.getSession();
+  log("3. Session conservée :", s.data.session ? "oui" : "NON");
+  const p = await sb.from("profiles").select("*").eq("id", r.data.user.id).single();
+  if (p.error) return log("4. ÉCHEC lecture profil :", p.error.code ?? "", p.error.message);
+  log("4. Profil trouvé :", JSON.stringify(p.data));
+  const q = await sb.from("requests").select("id").limit(1);
+  log("5. Lecture des demandes :", q.error ? "ÉCHEC " + q.error.message : "OK");
+  log("\nTout est bon : le problème ne vient pas de Supabase.");
+};
+</script>
+</body></html>
